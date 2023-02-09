@@ -1,0 +1,6 @@
+;; stdlib++
+(int) equal_slices (slice s1, slice s2) asm "SDEQ";
+(int) mod (int x, int y) asm "MOD";
+(int) divc (int x, int y) asm "DIVC";
+slice preload_bits_offset(slice s, int offset, int len) asm "SDSUBSTR";
+(cell) empty_cell() asm "<b b> PUSHREF";

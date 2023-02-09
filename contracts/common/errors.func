@@ -1,0 +1,7 @@
+const error::wrong_workchain = 85;
+const error::invalid_caller = 82;
+const error::invalid_call = 88;
+const error::insufficient_gas = 83;
+const error::wrong_address = 86;
+
+const error::wrong_op = 0xFFFF;

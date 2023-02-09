@@ -1,0 +1,13 @@
+
+;; user calls
+const op::cast_vote = "cast_vote"c;     ;; 0x13828ee9
+const op::verify_vote = "verify_vote"c; ;; 0x5e73911f
+const op::add_vote = "add_vote"c;       ;; 0x54e85894
+
+;; admin calls
+const op::add_user = "add_user"c;               ;; 0x836b0bb9
+const op::remove_user = "remove_user"c;         ;; 0x9ff56bb9
+const op::change_admin = "change_admin"c;         ;; 0xd4deb03b
+const op::claim_admin = "claim_admin"c;     ;; 0xb443e630
+const op::reset_gas = "reset_gas"c;     ;; 0x42a0fb43
+const op::reset_gas_storage = "reset_gas_storage"c;     ;; 0xda764ba3

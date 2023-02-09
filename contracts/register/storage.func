@@ -1,0 +1,19 @@
+() load_storage() impure inline {
+    slice ds = get_data().begin_parse();
+    storage::admin_address = ds~load_msg_addr();
+    storage::admin_pending = ds~load_msg_addr();
+    storage::address_list = ds~load_dict();
+    storage::vote_storage_code = ds~load_ref();
+    storage::vote_status_code = ds~load_ref();
+    ds.end_parse();
+}
+
+() save_storage() impure inline {
+    set_data(begin_cell()
+        .store_slice(storage::admin_address)
+        .store_slice(storage::admin_pending)
+        .store_dict(storage::address_list)
+        .store_ref(storage::vote_storage_code)
+        .store_ref(storage::vote_status_code)
+    .end_cell());
+}

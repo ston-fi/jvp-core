@@ -1,0 +1,77 @@
+() handle_admin_messages(int op, int query_id, int my_balance, int msg_value, slice in_msg_body) impure inline {
+
+    throw_unless(error::insufficient_gas, msg_value > ctx::fwd_fee + GAS_CONSUMPTION + MIN_TON_REGISTER);
+
+    if (op == op::reset_gas) {
+        raw_reserve(MIN_TON_REGISTER, RESERVE_EXACTLY);
+        send_empty_message(0, ctx::sender_address, CARRY_ALL_BALANCE | IGNORE_ERRORS);
+        return ();
+    }
+
+    if (op == op::reset_gas_storage) {
+        throw_unless(error::insufficient_gas, msg_value > ctx::fwd_fee * 2 + GAS_CONSUMPTION * 2 + MIN_TON_REGISTER + MIN_TON_VOTE_STORAGE);
+
+        raw_reserve(max(my_balance - msg_value, MIN_TON_REGISTER), RESERVE_EXACTLY);
+        
+        slice jetton_address = in_msg_body~load_msg_addr();
+        (_, slice vote_storage_address) = get_vote_storage_state_init_and_address(jetton_address);
+
+        cell msg_body = begin_cell()
+            .store_uint(op::reset_gas, 32)
+            .store_uint(query_id, 64)
+            .store_slice(ctx::sender_address)
+        .end_cell();
+
+        send_simple_message(0, vote_storage_address, msg_body, CARRY_ALL_BALANCE);
+        return ();
+    }
+
+    if (op == op::add_user) {
+        raw_reserve(max(my_balance - msg_value, MIN_TON_REGISTER), RESERVE_EXACTLY);
+
+        slice user_address = in_msg_body~load_msg_addr();
+        force_chain(WORKCHAIN, user_address, error::wrong_workchain);
+
+        (_, int hashpart) = parse_std_addr(user_address);
+        storage::address_list~udict_set(256, hashpart, empty_slice());
+
+        save_storage();
+
+        send_empty_message(0, ctx::sender_address, CARRY_ALL_BALANCE | IGNORE_ERRORS);
+
+        return ();
+    }
+
+    if (op == op::remove_user) {
+        raw_reserve(max(my_balance - msg_value, MIN_TON_REGISTER), RESERVE_EXACTLY);
+
+        slice user_address = in_msg_body~load_msg_addr();
+        force_chain(WORKCHAIN, user_address, error::wrong_workchain);
+
+        (_, int hashpart) = parse_std_addr(user_address);
+        storage::address_list~udict_delete?(256, hashpart);
+
+        save_storage();
+
+        send_empty_message(0, ctx::sender_address, CARRY_ALL_BALANCE | IGNORE_ERRORS);
+
+        return ();
+    }
+
+    if (op == op::change_admin) {
+        raw_reserve(max(my_balance - msg_value, MIN_TON_REGISTER), RESERVE_EXACTLY);
+
+        slice user_address = in_msg_body~load_msg_addr();
+        force_chain(WORKCHAIN, user_address, error::wrong_workchain);
+
+        storage::admin_pending = user_address;
+
+        save_storage();
+
+        send_empty_message(0, ctx::sender_address, CARRY_ALL_BALANCE | IGNORE_ERRORS);
+        
+        return ();
+    }
+
+    throw(error::wrong_op);
+}

@@ -1,0 +1,9 @@
+;; globals here
+
+global slice ctx::sender_address;
+
+global slice storage::jetton_address;
+global slice storage::user_address;
+global slice storage::vote_storage_address;
+global int storage::white_vote;
+global int storage::black_vote;

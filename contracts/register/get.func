@@ -1,0 +1,22 @@
+;; get methods
+
+(slice, slice, cell, cell, cell) get_register_data() method_id {
+    ;; returns register storage
+    load_storage();
+    return (
+        storage::admin_address,
+        storage::admin_pending,
+        storage::address_list,
+        storage::vote_storage_code,
+        storage::vote_status_code
+    );
+}
+
+(slice) get_vote_storage_address(slice jetton_address) method_id {
+    ;; returns vote_storage address
+
+    load_storage();
+    (_, slice vote_storage_address) = get_vote_storage_state_init_and_address(jetton_address);
+
+    return (vote_storage_address);
+}

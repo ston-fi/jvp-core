@@ -1,0 +1,17 @@
+(int) get_workchain(slice address) inline {
+      (int wc, _) = parse_std_addr(address);
+    return wc;
+}
+
+() force_chain(int workchain, slice address, int error_code) impure inline {
+      (int wc) = get_workchain(address);
+    throw_unless(error_code, wc == workchain);
+}
+
+(slice) get_serialized_address(int workchain, int address) inline {
+    return (begin_cell()
+        .store_uint(4, 3)
+        .store_uint(workchain, 8)
+        .store_uint(address, 256)
+    ).end_cell().begin_parse();
+}

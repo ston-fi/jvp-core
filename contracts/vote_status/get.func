@@ -1,0 +1,14 @@
+;; get methods
+
+(slice, slice, slice, int, int) get_vote_status_data() method_id {
+    ;; returns vote_status storage
+    load_storage();
+
+    return (
+        storage::jetton_address,
+        storage::user_address,
+        storage::vote_storage_address,
+        storage::white_vote,
+        storage::black_vote
+    );
+}

@@ -1,0 +1,14 @@
+.vscode/
+node_modules
+.env*
+!.env.example
+.wget-hsts
+bin
+
+/.idea
+.DS_Store
+
+build/*.fif
+build/*.fc
+build/*.cell
+build/_rnd_addr.txt

@@ -1,0 +1,98 @@
+#pragma version >=0.2.0;
+
+#include "common/stdlib.func";
+#include "common/messages.func";
+#include "common/reserves.func"; 
+#include "common/utils.func";
+#include "common/errors.func";
+#include "common/params.func";
+#include "common/op.func";
+
+#include "vote_status/globals.func";
+#include "vote_status/storage.func";
+#include "vote_status/get.func";
+
+
+() recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if in_msg_body.slice_empty?() { ;; ignore empty messages
+        return ();
+    }
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+
+    if flags & 1 {
+        return ();
+    }
+
+    load_storage();
+
+    ctx::sender_address = cs~load_msg_addr();
+
+    ;; gas is checked on register
+
+    (int op, int query_id) = (in_msg_body~load_uint(32), in_msg_body~load_uint(64));
+
+    if (op == op::reset_gas) {
+        throw_unless(error::invalid_caller, equal_slices(ctx::sender_address, storage::user_address));
+        raw_reserve(MIN_TON_VOTE_STATUS, RESERVE_EXACTLY);
+        send_empty_message(0, ctx::sender_address, CARRY_ALL_BALANCE | IGNORE_ERRORS);
+        return ();
+    }
+
+    if (op == op::verify_vote) {
+        ;; check if caller is vote storage
+        throw_unless(error::invalid_caller, equal_slices(ctx::sender_address, storage::vote_storage_address));
+
+        int white_vote = in_msg_body~load_uint(1);
+        int black_vote = in_msg_body~load_uint(1);
+        
+        ;; cannot call with the same vote already on storage
+        ;; send gas back to user
+        if ((white_vote == storage::white_vote) & (black_vote == storage::black_vote)) {
+            send_empty_message(0, storage::user_address, CARRY_REMAINING_GAS | IGNORE_ERRORS);
+            return ();
+        }
+
+        ;; can be -1, 0 or 1
+        ;; -1 is used for vote change
+        int white_add = 0;
+        int black_add = 0;
+
+        ;; vote change
+        if (storage::white_vote) {
+            ;; change vote from white to black
+            white_add = -1;
+            black_add = 1;
+            storage::white_vote = 0;
+            storage::black_vote = 1;
+        } elseif (storage::black_vote) {
+            ;; change vote from black to white
+            white_add = 1;
+            black_add = -1;
+            storage::white_vote = 1;
+            storage::black_vote = 0;
+        } elseif ((~ storage::white_vote) & (~ storage::black_vote)) {
+            ;; initial vote
+            white_add = white_vote;
+            black_add = black_vote;
+            storage::white_vote = white_vote;
+            storage::black_vote = black_vote;
+        }
+
+        cell msg_body = begin_cell()
+            .store_uint(op::add_vote, 32)
+            .store_uint(query_id, 64)
+            .store_slice(storage::user_address)
+            .store_int(white_add, 2)
+            .store_int(black_add, 2)
+        .end_cell();
+
+        raw_reserve(max(my_balance - msg_value, MIN_TON_VOTE_STATUS), RESERVE_EXACTLY);
+        send_simple_message(0, storage::vote_storage_address, msg_body, CARRY_ALL_BALANCE);
+
+        save_storage();
+        return ();
+    }
+
+    throw(error::wrong_op);
+}

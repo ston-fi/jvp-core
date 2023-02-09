@@ -1,0 +1,25 @@
+cell pack_vote_status_data(slice user_address) inline {
+  return begin_cell()
+    .store_slice(storage::jetton_address)                ;; jetton address
+    .store_slice(user_address)                ;; jetton address
+    .store_slice(my_address())                ;; register address
+    .store_uint(0, 1)                         ;; whitelisting votes
+    .store_uint(0, 1)                         ;; blacklisting votes
+  .end_cell();
+}
+
+cell calculate_vote_status_state_init(slice user_address) inline {
+  return begin_cell()
+    .store_uint(0, 2)
+    .store_dict(storage::vote_status_code)
+    .store_dict(pack_vote_status_data(user_address))
+    .store_uint(0, 1)
+  .end_cell();
+}
+
+
+(cell, slice) get_vote_status_state_init_and_address(slice user_address) inline {
+    cell state_init = calculate_vote_status_state_init(user_address);
+    
+    return (state_init, get_serialized_address(WORKCHAIN, cell_hash(state_init)));
+}

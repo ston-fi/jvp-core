@@ -1,0 +1,10 @@
+;; globals here
+
+global slice ctx::sender_address;
+global int ctx::fwd_fee;
+
+global cell storage::vote_storage_code;
+global cell storage::vote_status_code;
+global cell storage::address_list;
+global slice storage::admin_address;
+global slice storage::admin_pending;
