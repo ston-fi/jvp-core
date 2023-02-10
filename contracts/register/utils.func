@@ -1,25 +1,25 @@
-cell pack_vote_storage_data(slice jetton_address) inline {
+cell pack_vote_storage_data(slice vote_address) inline {
   return begin_cell()
     .store_slice(my_address())                ;; register address
-    .store_slice(jetton_address)                ;; jetton address
-    .store_uint(0, 64)                         ;; whitelisting votes
-    .store_uint(0, 64)                         ;; blacklisting votes
+    .store_slice(vote_address)                ;; vote address
+    .store_uint(0, 64)                         ;; positive votes
+    .store_uint(0, 64)                         ;; negative votes
     .store_ref(storage::vote_status_code)       ;; vote status contract code
   .end_cell();
 }
 
-cell calculate_vote_storage_state_init(slice jetton_address) inline {
+cell calculate_vote_storage_state_init(slice vote_address) inline {
   return begin_cell()
     .store_uint(0, 2)
     .store_dict(storage::vote_storage_code)
-    .store_dict(pack_vote_storage_data(jetton_address))
+    .store_dict(pack_vote_storage_data(vote_address))
     .store_uint(0, 1)
   .end_cell();
 }
 
 
-(cell, slice) get_vote_storage_state_init_and_address(slice jetton_address) inline {
-    cell state_init = calculate_vote_storage_state_init(jetton_address);
+(cell, slice) get_vote_storage_state_init_and_address(slice vote_address) inline {
+    cell state_init = calculate_vote_storage_state_init(vote_address);
     
     return (state_init, get_serialized_address(WORKCHAIN, cell_hash(state_init)));
 }

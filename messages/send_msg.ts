@@ -81,8 +81,8 @@ async function main() {
                 body: new CommonMessageInfo({
                     body: new CellMessage(register.castVote({
                         jettonAddress: JETTON_ADDRESS,
-                        whiteVote: new BN(1),
-                        blackVote: new BN(0)
+                        posVote: new BN(1),
+                        negVote: new BN(0)
                     })),
                 }),
             }),

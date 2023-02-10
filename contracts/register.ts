@@ -18,38 +18,38 @@ export function data(params: {
 }
 
 export function castVote(params: {
-    jettonAddress: Address;
-    whiteVote: BN;
-    blackVote: BN;
+    voteAddress: Address;
+    posVote: BN;
+    negVote: BN;
 }): Cell {
     return beginMessage({ op: new BN(0x13828ee9) })
-        .storeAddress(params.jettonAddress)
-        .storeUint(params.whiteVote, 1)
-        .storeUint(params.blackVote, 1)
+        .storeAddress(params.voteAddress)
+        .storeUint(params.posVote, 1)
+        .storeUint(params.negVote, 1)
         .endCell();
 }
 
-export function addUser(params: {
-    userAddress: Address;
+export function addVoter(params: {
+    voterAddress: Address;
 }): Cell {
-    return beginMessage({ op: new BN(0x836b0bb9) })
-        .storeAddress(params.userAddress)
+    return beginMessage({ op: new BN(0x9b3f4098) })
+        .storeAddress(params.voterAddress)
         .endCell();
 }
 
-export function removeUser(params: {
-    userAddress: Address;
+export function removeVoter(params: {
+    voterAddress: Address;
 }): Cell {
-    return beginMessage({ op: new BN(0x9ff56bb9) })
-        .storeAddress(params.userAddress)
+    return beginMessage({ op: new BN(0x9b23def8) })
+        .storeAddress(params.voterAddress)
         .endCell();
 }
 
 export function changeAdmin(params: {
-    userAddress: Address;
+    newAdminAddress: Address;
 }): Cell {
     return beginMessage({ op: new BN(0xd4deb03b) })
-        .storeAddress(params.userAddress)
+        .storeAddress(params.newAdminAddress)
         .endCell();
 }
 
@@ -64,10 +64,10 @@ export function resetGas(): Cell {
 }
 
 export function resetGasStorage( params: {
-    jettonAddress: Address
+    voteAddress: Address
 }): Cell {
     return beginMessage({ op: new BN(0xda764ba3) })
-        .storeAddress(params.jettonAddress)
+        .storeAddress(params.voteAddress)
         .endCell();
 }
 

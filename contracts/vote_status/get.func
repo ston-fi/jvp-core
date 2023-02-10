@@ -5,10 +5,10 @@
     load_storage();
 
     return (
-        storage::jetton_address,
-        storage::user_address,
+        storage::vote_address,
+        storage::voter_address,
         storage::vote_storage_address,
-        storage::white_vote,
-        storage::black_vote
+        storage::positive_vote,
+        storage::negative_vote
     );
 }

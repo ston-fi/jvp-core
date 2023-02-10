@@ -46,7 +46,7 @@ function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-type MsgType = "add_user" | "remove_user" | "change_admin" | "claim_admin";
+type MsgType = "add_voter" | "remove_voter" | "change_admin" | "claim_admin";
 type EnvString = string | undefined;
 
 
@@ -187,9 +187,9 @@ describe("on-chain register test", () => {
                 walletContract: walletContract,
                 walletKey: walletKey,
                 msgBody: register.castVote({
-                    jettonAddress: JETTON_ADDRESS,
-                    whiteVote: white,
-                    blackVote: black,
+                    voteAddress: JETTON_ADDRESS,
+                    posVote: white,
+                    negVote: black,
                 }),
                 toAddress: addrRegister
             });
@@ -222,9 +222,9 @@ describe("on-chain register test", () => {
                 walletContract: walletContract,
                 walletKey: walletKey,
                 msgBody: register.castVote({
-                    jettonAddress: JETTON_ADDRESS,
-                    whiteVote: white,
-                    blackVote: black,
+                    voteAddress: JETTON_ADDRESS,
+                    posVote: white,
+                    negVote: black,
                 }),
                 toAddress: addrRegister
             });
@@ -358,12 +358,12 @@ describe("on-chain admin register test", () => {
     it("scenario #1: add and remove users", async () => {
 
         const ctxMsg = async (userAddress: Address, msgType: MsgType) => {
-            let sendMsgBody = msgType === "add_user" ?
-                register.addUser({
-                    userAddress: userAddress
+            let sendMsgBody = msgType === "add_voter" ?
+                register.addVoter({
+                    voterAddress: userAddress
                 }) :
-                register.removeUser({
-                    userAddress: userAddress
+                register.removeVoter({
+                    voterAddress: userAddress
                 });
 
             await sendMessage({
@@ -382,8 +382,8 @@ describe("on-chain admin register test", () => {
 
         let addrRegister = deployData.addressRegister;
 
-        await ctxMsg(alice, "remove_user");
-        await ctxMsg(bob, "add_user");
+        await ctxMsg(alice, "remove_voter");
+        await ctxMsg(bob, "add_voter");
 
         let getData = await getChainRegisterData(client, addrRegister);
         let keyList = getData.keyList;
@@ -405,7 +405,7 @@ describe("on-chain admin register test", () => {
         const ctxMsg = async (ctxContract: WalletContract, wKey: KeyPair, msgType: MsgType, userAddress?: Address) => {
             let sendMsgBody = msgType === "change_admin" ?
                 register.changeAdmin({
-                    userAddress: userAddress as Address
+                    newAdminAddress: userAddress as Address
                 }) :
                 register.claimAdmin();
 

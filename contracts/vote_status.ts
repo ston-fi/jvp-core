@@ -3,28 +3,28 @@ import { Cell, beginCell, Address } from "ton";
 import { beginMessage } from "./helpers";
 
 export function data(params: {
-    jettonAddress: Address;
-    userAddress: Address;
+    voteAddress: Address;
+    voterAddress: Address;
     voteStorageAddress: Address;
-    whiteVote: BN;
-    blackVote: BN;
+    posVote: BN;
+    negVote: BN;
 }): Cell {
     return beginCell()
-        .storeAddress(params.jettonAddress)
-        .storeAddress(params.userAddress)
+        .storeAddress(params.voteAddress)
+        .storeAddress(params.voterAddress)
         .storeAddress(params.voteStorageAddress)
-        .storeUint(params.whiteVote, 1)
-        .storeUint(params.blackVote, 1)
+        .storeUint(params.posVote, 1)
+        .storeUint(params.negVote, 1)
         .endCell();
 }
 
 export function verifyVote(params: {
-    whiteVote: BN;
-    blackVote: BN;
+    posVote: BN;
+    negVote: BN;
 }): Cell {
     return beginMessage({ op: new BN(0x5e73911f) })
-        .storeUint(params.whiteVote, 1)
-        .storeUint(params.blackVote, 1)
+        .storeUint(params.posVote, 1)
+        .storeUint(params.negVote, 1)
         .endCell();
 }
 

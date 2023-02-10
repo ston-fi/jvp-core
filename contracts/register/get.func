@@ -12,11 +12,11 @@
     );
 }
 
-(slice) get_vote_storage_address(slice jetton_address) method_id {
+(slice) get_vote_storage_address(slice vote_address) method_id {
     ;; returns vote_storage address
 
     load_storage();
-    (_, slice vote_storage_address) = get_vote_storage_state_init_and_address(jetton_address);
+    (_, slice vote_storage_address) = get_vote_storage_state_init_and_address(vote_address);
 
     return (vote_storage_address);
 }

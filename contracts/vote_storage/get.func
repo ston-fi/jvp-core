@@ -6,18 +6,18 @@
 
     return (
         storage::register_address,
-        storage::jetton_address,
-        storage::white_votes,
-        storage::black_votes,
+        storage::vote_address,
+        storage::positive_votes,
+        storage::negative_votes,
         storage::vote_status_code
     );
 }
 
-(slice) get_vote_status_address(slice user_address) method_id {
+(slice) get_vote_status_address(slice voter_address) method_id {
     ;; returns vote_status address
 
     load_storage();
-    (_, slice vote_status_address) = get_vote_status_state_init_and_address(user_address);
+    (_, slice vote_status_address) = get_vote_status_state_init_and_address(voter_address);
 
     return (vote_status_address);
 }

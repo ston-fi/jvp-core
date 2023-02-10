@@ -169,7 +169,7 @@ describe("register test", () => {
 
     });
 
-    it("should cast white vote", async () => {
+    it("should cast positive vote", async () => { 
         const ctxFun = async (sender: Address) => {
             const castWhiteVote = new BN(1);
             const castBlackVote = new BN(0);
@@ -178,9 +178,9 @@ describe("register test", () => {
                 contract: contract,
                 fromAddress: sender,
                 msgBody: register.castVote({
-                    jettonAddress: jetton,
-                    whiteVote: castWhiteVote,
-                    blackVote: castBlackVote
+                    voteAddress: jetton,
+                    posVote: castWhiteVote,
+                    negVote: castBlackVote
                 }),
                 outMsgAddress: getVoteStorageAddress(addressList, jetton)
             }) as Slice;
@@ -204,7 +204,7 @@ describe("register test", () => {
 
     });
 
-    it("should cast black vote", async () => {
+    it("should cast negative vote", async () => {
         const ctxFun = async (sender: Address) => {
             const castWhiteVote = new BN(0);
             const castBlackVote = new BN(1);
@@ -213,9 +213,9 @@ describe("register test", () => {
                 contract: contract,
                 fromAddress: sender,
                 msgBody: register.castVote({
-                    jettonAddress: jetton,
-                    whiteVote: castWhiteVote,
-                    blackVote: castBlackVote
+                    voteAddress: jetton,
+                    posVote: castWhiteVote,
+                    negVote: castBlackVote
                 }),
                 outMsgAddress: getVoteStorageAddress(addressList, jetton)
             }) as Slice;
@@ -237,15 +237,15 @@ describe("register test", () => {
         }
     });
 
-    it("should bounce on cast with same value", async () => {
+    it("should bounce on cast with both votes", async () => {
         const ctxFun = async (sender: Address, value: BN) => {
             const msgBody = await sendMessage({
                 contract: contract,
                 fromAddress: sender,
                 msgBody: register.castVote({
-                    jettonAddress: jetton,
-                    whiteVote: value,
-                    blackVote: value
+                    voteAddress: jetton,
+                    posVote: value,
+                    negVote: value
                 }),
                 expectBounce: true
             });
@@ -253,20 +253,51 @@ describe("register test", () => {
 
 
         for (let user of validUsers) {
-            await ctxFun(user, new BN(0));
             await ctxFun(user, new BN(1));
         }
 
     });
+
+    it("should reset vote", async () => {
+        const ctxFun = async (sender: Address) => { 
+            const msgBody = await sendMessage({
+                contract: contract,
+                fromAddress: sender,
+                msgBody: register.castVote({
+                    voteAddress: jetton,
+                    posVote: new BN(0),
+                    negVote: new BN(0)
+                }),
+            }) as Slice;
+
+            const opCode = msgBody.readUint(32);
+            const qId = msgBody.readUint(64);
+            const senderAddress = msgBody.readAddress();
+            const whiteVote = msgBody.readUint(1);
+            const blackVote = msgBody.readUint(1);
+
+            // verify content
+            expect(opCode).to.be.bignumber.eq(opCodeList.cast_vote);
+            expect(whiteVote).to.be.bignumber.equal(new BN(0));
+            expect(blackVote).to.be.bignumber.equal(new BN(0));
+        };
+
+
+        for (let user of validUsers) {
+            await ctxFun(user);
+        }
+
+    });
+
     it("should bounce a random user cast", async () => {
         const ctxFun = async (sender: Address, value: BN) => {
             const msgBody = await sendMessage({
                 contract: contract,
                 fromAddress: sender,
                 msgBody: register.castVote({
-                    jettonAddress: jetton,
-                    whiteVote: value,
-                    blackVote: reverseBN(value)
+                    voteAddress: jetton,
+                    posVote: value,
+                    negVote: reverseBN(value)
                 }),
                 expectBounce: true
             });
@@ -317,9 +348,9 @@ describe("register test", () => {
                 contract: contract,
                 fromAddress: sender,
                 msgBody: register.castVote({
-                    jettonAddress: jetton,
-                    whiteVote: new BN(1),
-                    blackVote: new BN(0)
+                    voteAddress: jetton,
+                    posVote: new BN(1),
+                    negVote: new BN(0)
                 }),
                 gas: toNano(0.01),
                 expectBounce: true
@@ -381,8 +412,8 @@ describe("register admin test", () => {
             let msgBody = await sendMessage({
                 contract: contract,
                 fromAddress: admin,
-                msgBody: register.addUser({
-                    userAddress: userAddress
+                msgBody: register.addVoter({
+                    voterAddress: userAddress
                 }),
                 outMsgAddress: admin
             }) as Slice;
@@ -408,8 +439,8 @@ describe("register admin test", () => {
             let msgBody = await sendMessage({
                 contract: contract,
                 fromAddress: admin,
-                msgBody: register.removeUser({
-                    userAddress: userAddress
+                msgBody: register.removeVoter({
+                    voterAddress: userAddress
                 }),
                 outMsgAddress: admin
             }) as Slice;
@@ -436,7 +467,7 @@ describe("register admin test", () => {
                 contract: contract,
                 fromAddress: admin,
                 msgBody: register.changeAdmin({
-                    userAddress: newAdmin
+                    newAdminAddress: newAdmin
                 }),
                 outMsgAddress: admin
             }) as Slice;
@@ -458,7 +489,7 @@ describe("register admin test", () => {
                 contract: contract,
                 fromAddress: admin,
                 msgBody: register.changeAdmin({
-                    userAddress: newAdmin
+                    newAdminAddress: newAdmin
                 }),
                 outMsgAddress: admin
             }) as Slice;
@@ -491,7 +522,7 @@ describe("register admin test", () => {
                 contract: contract,
                 fromAddress: admin,
                 msgBody: register.resetGasStorage({
-                    jettonAddress: jetton
+                    voteAddress: jetton
                 }),
                 outMsgAddress: voteStorageAddress
             }) as Slice;

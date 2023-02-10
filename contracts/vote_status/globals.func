@@ -2,8 +2,8 @@
 
 global slice ctx::sender_address;
 
-global slice storage::jetton_address;
-global slice storage::user_address;
+global slice storage::vote_address;
+global slice storage::voter_address;
 global slice storage::vote_storage_address;
-global int storage::white_vote;
-global int storage::black_vote;
+global int storage::positive_vote;
+global int storage::negative_vote;

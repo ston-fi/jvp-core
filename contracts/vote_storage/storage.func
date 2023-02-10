@@ -1,9 +1,9 @@
 () load_storage() impure inline {
     slice ds = get_data().begin_parse();
     storage::register_address = ds~load_msg_addr();
-    storage::jetton_address = ds~load_msg_addr();
-    storage::white_votes = ds~load_uint(64);
-    storage::black_votes = ds~load_uint(64);
+    storage::vote_address = ds~load_msg_addr();
+    storage::positive_votes = ds~load_uint(64);
+    storage::negative_votes = ds~load_uint(64);
     storage::vote_status_code = ds~load_ref();
     ds.end_parse();
 }
@@ -11,9 +11,9 @@
 () save_storage() impure inline {
     set_data(begin_cell()
         .store_slice(storage::register_address)
-        .store_slice(storage::jetton_address)
-        .store_uint(storage::white_votes, 64)
-        .store_uint(storage::black_votes, 64)
+        .store_slice(storage::vote_address)
+        .store_uint(storage::positive_votes, 64)
+        .store_uint(storage::negative_votes, 64)
         .store_ref(storage::vote_status_code)
     .end_cell());
 }

@@ -1,27 +1,29 @@
 # Introduction
 
-The goal of this project is to create on-chain jetton voting platform. The system consists of 3 primary contracts: `Register`, `Vote Storage` and `Vote Status`. 
+The goal of this project is to create on-chain Jetton voting platform. The system consists of 3 primary contracts: `Register`, `Vote Storage` and `Vote Status`. 
 
-The `Register` contract is the entry point of the system, it stores a number of wallet addresses which are allowed to vote and has an admin responsible for adding/removing user addresses from this list, as well as other administrative functions.  The `Register` routs vote calls to a `Vote Storage` contract, which is unique for each Jetton address. 
+The `Register` contract is the entry point of the system, it stores a number of wallet addresses which are allowed to vote ("voters" or "vote participants") and has an admin responsible for adding/removing addresses from this list, as well as other administrative functions. The `Register` routes vote calls to a `Vote Storage` contract, which is unique for each Jetton address. 
 
-`Vote Storage` stores all accumulated "trusted" and "untrusted" votes cast by users and routs user calls to `Vote Status` for vote verification (each `Vote Status` is unique for each Jetton for each user). 
+`Vote Storage` stores all accumulated "positive" and "negative" votes cast by vote participants and routes voter calls to `Vote Status` for vote verification (each `Vote Status` is unique for each Jetton for each vote participant). 
 
-`Vote Status` checks, if a user's vote is valid, and messages `Vote Storage` to modify a total vote count. All user votes are equal in power and each user can vote only once for each Jetton address (as well as change their vote from "trusted" to "untrusted" and vice versa). 
+`Vote Status` checks, if a voter's vote is valid, and messages `Vote Storage` to modify a total vote count. All vote participants' votes are equal in power and each voter can vote only once for each Jetton address (as well as change their vote from "positive" to "negative" and vice versa). A vote participant may also reset their vote by sending both "positive" and "negative" values as 0.
 
-To determine a status of a Jetton one must query an appropriate `Vote Storage` contract, which will return contract's stored "trusted" and "untrusted" votes; an exact formula of a Jetton reputation is up to the frontend implementation, which is independent of this system, but it is suggested to place a heavy emphasis on "untrusted" votes or even make a single "untrusted" vote outweigh any number of "trusted" votes.
+To determine a status of a Jetton one must query an appropriate `Vote Storage` contract, which will return contract's stored "positive" and "negative" votes; an exact formula of a Jetton reputation is up to the frontend implementation, which is independent of this system, but it is suggested to place a heavy emphasis on "negative" votes or even make a single "negative" vote outweigh any number of "positive" votes.
+
+It is important to note that the suggested system is not limited to voting only for Jettons. In fact, any valid arbitrary address can be voted for: addresses of NFTs, addresses of wallets, etc.
 
 # Message logic
 
 ## Initial vote casting by a user
 
-A user sends a custom payload to the `Register` contract with a Jetton address and their vote ("trusted" or "untrusted"). The register verifies that the user is allowed to cast their vote by checking the list of allowed addresses. The register routes the call to the `Vote storage` contract for the Jetton which forward this call to user's `Vote status` to verify if their vote is eligible. Finally, `Vote status` will send a message to modify the reputation of the Jetton to its `Vote storage` contract.
+A vote participant sends a custom payload to the `Register` contract with a Jetton address and their vote ("positive" or "negative"). The register verifies that the sender is allowed to cast their vote by checking the list of allowed addresses. The register routes the call to the `Vote storage` contract for the Jetton which forwards this call to voter's `Vote status` to verify if their vote is eligible. Finally, `Vote status` will send a message to modify the reputation of the Jetton to its `Vote storage` contract.
 
 ```mermaid
 graph LR
-    A[User1]
+    A[Voter1]
     W{Register}
     B((Jetton1<br/>Vote storage))
-    C(Jetton1 User1<br/>Vote status)
+    C(Jetton1 Voter1<br/>Vote status)
 
     A --> |op::cast_vote<br/>initial call|W
 
@@ -35,14 +37,18 @@ graph LR
 
 The mechanism is the same, except that `Vote status` contract checks if the new vote is different from the previous one.
 
+## Reset vote
+
+To reset their vote a vote participant sends both votes values as 0.
+
 ## Checking Jetton
 
-Checking is done through an off-chain get method on `Vote storage`
+Checking is done through an off-chain get method on `Vote storage`.
 
 
 # Register contract
 
-Main contract that routes user calls to the correct `Vote storage` contracts
+Main contract that routes vote participant's calls to the correct `Vote storage` contracts.
 
 ## Storage
 
@@ -56,10 +62,10 @@ Main contract that routes user calls to the correct `Vote storage` contracts
 
 ### `get_vote_storage_address`
 
-Returns an address of a `Vote Storage` contract for a Jetton address. 
+Returns an address of a `Vote Storage` contract for a vote address (Jetton address). 
 
 Args:
-- Jetton address
+- vote address
 
 ### `get_register_data`
 
@@ -72,21 +78,21 @@ Returns data from storage:
 
 ## Admin messages
 
-Those messages are sent by the `admin`
+Those messages are sent by the `admin`.
 
 ### **Message table**
 
 | Name               | Code       | Description                                       |
 | ------------------ | ---------- | ------------------------------------------------- |
-| `add_user`         | 0x836b0bb9 | Add a new address than is allowed to vote         |
-| `remove_user`      | 0x9ff56bb9 | Remove address from the list of allowed addresses |
+| `add_voter`         | 0x9b3f4098 | Add a new address than is allowed to vote         |
+| `remove_voter`      | 0x9b23def8 | Remove address from the list of allowed addresses |
 | `change_admin`     | 0xd4deb03b | Change admin to a new address                     |
 | `rest_gas`         | 0x42a0fb43 | Reset `Register` balance to min amount            |
 | `rest_gas_storage` | 0xda764ba3 | Reset `Vote Storage` balance to min amount        |
 
-### add_user
+### add_voter
 
-Add a new address to the list which are allowed to vote on a Jetton status
+Add a new address to the list which are allowed to vote on a Jetton status.
 
 #### **Incoming message body**
 
@@ -94,11 +100,11 @@ Add a new address to the list which are allowed to vote on a Jetton status
 | -------------- | --------- | ---------------------------------------- |
 | `op`           | `uint32`  | Operation code                           |
 | `query_id`     | `uint64`  | Query id                                 |
-| `user_address` | `address` | Address of a user to be added as a voter |
+| `voter_address` | `address` | Address of a user to be added as a voter |
 
-### remove_user
+### remove_voter
 
-Remove a user from the list of allowed to vote users
+Remove a user from the list of vote participant.
 
 #### **Incoming message body**
 
@@ -106,11 +112,11 @@ Remove a user from the list of allowed to vote users
 | -------------- | --------- | ------------------------------------------ |
 | `op`           | `uint32`  | Operation code                             |
 | `query_id`     | `uint64`  | Query id                                   |
-| `user_address` | `address` | Address of a user to be removed as a voter |
+| `voter_address` | `address` | Address of a user to be removed as a voter |
 
 ### change_admin
 
-Set a new `admin` address
+Set a new `admin` address.
 
 #### **Incoming message body**
 
@@ -118,7 +124,7 @@ Set a new `admin` address
 | -------------- | --------- | ------------------------------------- |
 | `op`           | `uint32`  | Operation code                        |
 | `query_id`     | `uint64`  | Query id                              |
-| `user_address` | `address` | Address of a user to be the new admin |
+| `new_admin_address` | `address` | Address of a new admin |
 
 ### reset_gas
 
@@ -145,7 +151,7 @@ Resets `Vote Storage` balance to `MIN_TON_VOTE_STORAGE` (0.05 $TON).
 | ---------------- | -------- | -------------- |
 | `op`             | `uint32` | Operation code |
 | `query_id`       | `uint64` | Query id       |
-| `jetton_address` | `address`  | Jetton address |
+| `vote_address` | `address`  | Jetton address |
 
 #### Outgoing messages
 
@@ -153,17 +159,17 @@ Sends a message with `reset_gas` op to a `Vote Storage` contract.
 
 ## User messages
 
-Those messages are sent by users
+Those messages are sent by users.
 ### **Message table**
 
 | Name          | Code       | Description                                  |
 | ------------- | ---------- | -------------------------------------------- |
 | `claim_admin` | 0xb443e630 | Claim new admin status by a new address      |
-| `cast_vote`   | 0x13828ee9 | Cast a vote for "trusted" or "untrusted" |
+| `cast_vote`   | 0x13828ee9 | Cast a vote for "positive" or "negative" status |
 
 ### claim_admin
 
-Claim an admin status. This call can only be made by a user that was specified by `change_admin` operation
+Claim an admin status. This call can only be made by a new admin that was specified by `change_admin` operation.
 
 #### **Incoming message body**
 
@@ -174,59 +180,59 @@ Claim an admin status. This call can only be made by a user that was specified b
 
 ### cast_vote
 
-Casts user's vote for "trusted" or "untrusted". Can cast an opposite vote for vote change. 
+Casts vote participant's vote for "positive" or "negative". Can cast an opposite vote for vote change or with both values as 0 to reset vote. 
 #### **Incoming message body**
 
 | Name             | Type      | Description                      |
 | ---------------- | --------- | -------------------------------- |
 | `op`             | `uint32`  | Operation code                   |
 | `query_id`       | `uint64`  | Query id                         |
-| `jetton_address` | `address` | An address of a Jetton           |
-| `white_vote`     | `uint1`   | If a user votes for "trusted" |
-| `black_vote`     | `uint1`   | If a user votes for "untrusted" |
+| `vote_address` | `address` | An address of a Jetton           |
+| `positive_vote`     | `uint1`   | If a user votes for "positive" |
+| `negative_vote`     | `uint1`   | If a user votes for "negative" |
 
 Notes:
 
-- `white_vote` and `black_vote` are not allowed to have the same value
+- `positive_vote` and `negative_vote` are not allowed to have value of 1 at the same time
 
 #### Outgoing messages
 
-Sends a messages to `Vote Storage` with `cast_vote` op code
+Sends a messages to `Vote Storage` with `cast_vote` op code.
 
 
 # Vote storage contract
 
-Stores a Jetton rep and forwards calls from users to `Vote status` contracts for vote eligibility verification
+Stores a Jetton rep and forwards calls from voters to `Vote status` contracts for vote eligibility verification.
 
 ## Storage
 
 - `Register` address
-- Jetton address
-- users' "trusted" votes
-- users' "untrusted" votes
+- vote address (Jetton address)
+- voters' "positive" votes
+- voters' "negative" votes
 - `Vote Status` code
 
 ## Off-chain getters
 
 ### `get_vote_status_address`
 
-Returns an address of a `Vote Status` contract for a user for this `Vote Storage`
+Returns an address of a `Vote Status` contract for a vote participant for this `Vote Storage`.
 
 Args:
-- user address
+- voter address
 
 ### `get_vote_storage_data`
 
 Returns data from storage:
 - `Register` address
-- Jetton address
-- "trusted" votes
-- "untrusted" votes
+- vote address (Jetton address)
+- "positive" votes
+- "negative" votes
 - `Vote Status` code
 
 ## Internal messages
 
-Those messages are sent by contracts
+Those messages are sent by contracts.
 ### **Message table**
 
 | Name        | Code       | Description                                                      |
@@ -237,21 +243,21 @@ Those messages are sent by contracts
 
 ### cast_vote
 
-Forward validity check of the call to `Vote Status`
+Forward validity check of the call to `Vote Status`.
 #### **Incoming message body**
 
 | Name             | Type      | Description                      |
 | ---------------- | --------- | -------------------------------- |
 | `op`             | `uint32`  | Operation code                   |
 | `query_id`       | `uint64`  | Query id                         |
-| `user_address`   | `address` | An address of a Jetton           |
-| `jetton_address` | `address` | An address of a Jetton           |
-| `white_vote`     | `uint1`   | If a user votes for "trusted" |
-| `black_vote`     | `uint1`   | If a user votes for "untrusted" |
+| `voter_address`   | `address` | An address of a vote participant           |
+| `vote_address` | `address` | An address of a Jetton           |
+| `positive_vote`     | `uint1`   | If a user votes for "positive" |
+| `negative_vote`     | `uint1`   | If a user votes for "negative" |
 
 #### Outgoing messages
 
-Sends a messages to `Vote Status` with `verify_vote` op code
+Sends a messages to `Vote Status` with `verify_vote` op code.
 
 ### add_vote
 
@@ -263,13 +269,13 @@ Modify votes on storage after user's call was verified by `Vote Status`
 | -------------- | --------- | ----------------------------------- |
 | `op`           | `uint32`  | Operation code                      |
 | `query_id`     | `uint64`  | Query id                            |
-| `user_address` | `address` | An address of a Jetton              |
-| `white_add`    | `int2`    | Number of "trusted" votes to add |
-| `black_add`    | `int2`    | Number of "untrusted" votes to add |
+| `voter_address` | `address` | An address of a vote participant              |
+| `positive_add`    | `int2`    | Number of "positive" votes to add |
+| `negative_add`    | `int2`    | Number of "negative" votes to add |
 
 #### Outgoing messages
 
-Sends remaining gas to user
+Sends remaining gas to the voter.
 
 ### reset_gas
 
@@ -289,26 +295,26 @@ Sends the rest of the balance to admin.
 
 # Vote status contract
 
-Verifies that a user is allowed to cast their vote and forwards a message back to `Vote storage` to add their vote to the rep
+Verifies that a vote participant is allowed to cast their vote and forwards a message back to `Vote storage` to add their vote to the total count of "positive" and "negative" votes.
 
 ## Storage
 
-- Jetton address
-- user address
+- vote address (Jetton address)
+- voter address
 - `Vote Storage` address
-- user's "trusted" vote status (0 or 1)
-- user's "untrusted" vote status (0 or 1)
+- voter's "positive" vote status (0 or 1)
+- voter's "negative" vote status (0 or 1)
 
 ## Off-chain getters
 
 ### `get_vote_status_data`
 
 Returns data from storage:
-- Jetton address
-- user address
+- vote address (Jetton address)
+- voter address
 - `Vote Storage` address
-- "trusted" vote
-- "untrusted" vote
+- "positive" vote
+- "negative" vote
 
 ## Internal messages
 
@@ -317,11 +323,11 @@ Those messages are sent by contracts
 
 | Name          | Code       | Description                                                                 |
 | ------------- | ---------- | --------------------------------------------------------------------------- |
-| `verify_vote` | 0x5e73911f | Is received from `Vote Storage`; check if a user is eligible to cast a vote |
+| `verify_vote` | 0x5e73911f | Is received from `Vote Storage`; check if a voter is eligible to cast a vote |
 
 ### verify_vote
 
-Check if user's vote is correct, i.e. it is an initial vote or a vote change
+Check if voter's vote is correct, i.e. it is an initial vote, a vote change or a reset.
 
 #### **Incoming message body**
 
@@ -329,16 +335,16 @@ Check if user's vote is correct, i.e. it is an initial vote or a vote change
 | ------------ | -------- | -------------------------------- |
 | `op`         | `uint32` | Operation code                   |
 | `query_id`   | `uint64` | Query id                         |
-| `white_vote` | `uint1`  | If a user votes for "trusted" |
-| `black_vote` | `uint1`  | If a user votes for "untrusted" |
+| `positive_vote` | `uint1`  | If a voters votes for "positive" |
+| `negative_vote` | `uint1`  | If a voters votes for "negative" |
 
 #### Outgoing messages
 
 Sends a messages to `Vote Storage` with `add_vote` op code
 
-## User messages
+## Voters messages
 
-Those messages are sent by users.
+Those messages are sent by voters.
 ### **Message table**
 
 | Name       | Code       | Description                          |
@@ -358,7 +364,7 @@ Resets contract balance to `MIN_TON_VOTE_STATUS` (0.01 $TON).
 
 #### Outgoing messages
 
-Sends the rest of the balance to the user.
+Sends the rest of the balance to the voter.
 
 
 

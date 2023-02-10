@@ -71,9 +71,9 @@ function getCastVoteMsg(params: {
         bounce: params.bounce ?? true,
         body: new CommonMessageInfo({
             body: new CellMessage(register.castVote({
-                jettonAddress: params.jettonAddress,
-                whiteVote: params.whiteVote,
-                blackVote: params.blackVote
+                voteAddress: params.jettonAddress,
+                posVote: params.whiteVote,
+                negVote: params.blackVote
             }))
         }),
     });
@@ -87,6 +87,7 @@ describe("pipeline test", () => {
         alice: Address,
         bob: Address,
         john: Address,
+        jack: Address,
         validUsers: Address[],
         invalidUsers: Address[],
         addressList: Dict,
@@ -99,8 +100,9 @@ describe("pipeline test", () => {
         bob = randomAddress('bob');
         john = randomAddress('john');
         jetton = randomAddress('jetton');
+        jack = randomAddress('jack');
 
-        validUsers = [alice, bob];
+        validUsers = [alice, bob, jack];
         invalidUsers = [john];
         addressList = getAddressDict(validUsers);
 
@@ -193,7 +195,7 @@ describe("pipeline test", () => {
         expect(getData.blackVotes).to.be.bignumber.eq(new BN(0));
 
     });
-    it("should ignore same vote values", async () => {
+    it("should ignore both votes set", async () => {
         const vsAddress = getVoteStorageAddress(addressList, jetton);
 
         ctxFun = async (user: Address, value: BN) => {
@@ -206,14 +208,94 @@ describe("pipeline test", () => {
             }));
         };
 
-        let user = validUsers[0];
-        await ctxFun(user, new BN(1));
-        await ctxFun(user, new BN(0));
+        for (let user of validUsers) {
+            await ctxFun(user, new BN(1));
+        }
 
         const getData = await getVoteStorageData(ctrPipe, vsAddress)
 
         expect(getData.whiteVotes).to.be.bignumber.eq(new BN(0));
         expect(getData.blackVotes).to.be.bignumber.eq(new BN(0));
 
+    });
+    it("should reset positive votes", async () => {
+        const vsAddress = getVoteStorageAddress(addressList, jetton);
+
+        const ctxReset = async (user: Address) => {
+            await ctrPipe.pipeMessage(getCastVoteMsg({
+                whiteVote: new BN(0),
+                blackVote: new BN(0),
+                jettonAddress: jetton,
+                toAddress: ctrRegister.getAddress(),
+                fromAddress: user
+            }));
+        };
+
+
+        for (let user of validUsers) {
+            await ctxFun(user, new BN(1));
+        }
+        await ctxReset(validUsers[0])
+
+        const getData = await getVoteStorageData(ctrPipe, vsAddress)
+
+        expect(getData.whiteVotes).to.be.bignumber.eq(new BN(validUsers.length - 1));
+        expect(getData.blackVotes).to.be.bignumber.eq(new BN(0));
+
+    });
+    it("should reset negative votes", async () => {
+        const vsAddress = getVoteStorageAddress(addressList, jetton);
+        
+        const ctxReset = async (user: Address) => {
+            await ctrPipe.pipeMessage(getCastVoteMsg({
+                whiteVote: new BN(0),
+                blackVote: new BN(0),
+                jettonAddress: jetton,
+                toAddress: ctrRegister.getAddress(),
+                fromAddress: user
+            }));
+        };
+        
+        
+        for (let user of validUsers) {
+            await ctxFun(user, new BN(0));
+        }
+        await ctxReset(validUsers[0])
+
+        const getData = await getVoteStorageData(ctrPipe, vsAddress)
+        
+        expect(getData.whiteVotes).to.be.bignumber.eq(new BN(0));
+        expect(getData.blackVotes).to.be.bignumber.eq(new BN(validUsers.length - 1));
+        
+    });
+    it("should reset cast vote after reset", async () => {
+        const vsAddress = getVoteStorageAddress(addressList, jetton);
+
+        const ctxReset = async (user: Address) => {
+            await ctrPipe.pipeMessage(getCastVoteMsg({
+                whiteVote: new BN(0),
+                blackVote: new BN(0),
+                jettonAddress: jetton,
+                toAddress: ctrRegister.getAddress(),
+                fromAddress: user
+            }));
+        };
+
+        for (let user of validUsers) {
+            await ctxFun(user, new BN(1));
+        }
+        await ctxReset(validUsers[0])
+
+        let getData = await getVoteStorageData(ctrPipe, vsAddress)
+
+        expect(getData.whiteVotes).to.be.bignumber.eq(new BN(validUsers.length - 1));
+        expect(getData.blackVotes).to.be.bignumber.eq(new BN(0));
+
+        await ctxFun(validUsers[0], new BN(1));
+
+        getData = await getVoteStorageData(ctrPipe, vsAddress)
+
+        expect(getData.whiteVotes).to.be.bignumber.eq(new BN(validUsers.length));
+        expect(getData.blackVotes).to.be.bignumber.eq(new BN(0));
     });
 });

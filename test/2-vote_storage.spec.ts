@@ -182,9 +182,9 @@ describe("vote_storage test", () => {
                 contract: contract,
                 fromAddress: sender,
                 msgBody: voteStorage.castVote({
-                    userAddress: sender,
-                    whiteVote: new BN(1),
-                    blackVote: new BN(0)
+                    voterAddress: sender,
+                    posVotes: new BN(1),
+                    negVotes: new BN(0)
                 }),
                 expectBounce: true
             }) as Slice;
@@ -202,9 +202,9 @@ describe("vote_storage test", () => {
                 contract: contract,
                 fromAddress: getRegisterAddress(addressList),
                 msgBody: voteStorage.castVote({
-                    userAddress: user,
-                    whiteVote: value,
-                    blackVote: reverseBN(value)
+                    voterAddress: user,
+                    posVotes: value,
+                    negVotes: reverseBN(value)
                 }),
             }) as Slice;
 
@@ -234,9 +234,9 @@ describe("vote_storage test", () => {
                 contract: contract,
                 fromAddress: getVoteStatusAddress(addressList, jetton, user),
                 msgBody: voteStorage.addVote({
-                    userAddress: user,
-                    whiteAdd: value,
-                    blackAdd: reverseBN(value)
+                    voterAddress: user,
+                    posAdd: value,
+                    negAdd: reverseBN(value)
                 }),
             }) as Slice;
 
@@ -259,9 +259,9 @@ describe("vote_storage test", () => {
                 contract: contract,
                 fromAddress: getVoteStatusAddress(addressList, jetton, user),
                 msgBody: voteStorage.addVote({
-                    userAddress: user,
-                    whiteAdd: value,
-                    blackAdd: reverseBN(value)
+                    voterAddress: user,
+                    posAdd: value,
+                    negAdd: reverseBN(value)
                 }),
             }) as Slice;
 
@@ -293,9 +293,9 @@ describe("vote_storage test", () => {
                 contract: contract,
                 fromAddress: getVoteStatusAddress(addressList, jetton, user),
                 msgBody: voteStorage.addVote({
-                    userAddress: user,
-                    whiteAdd: white,
-                    blackAdd: black
+                    voterAddress: user,
+                    posAdd: white,
+                    negAdd: black
                 }),
             }) as Slice;
 

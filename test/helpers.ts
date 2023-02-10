@@ -33,9 +33,9 @@ export const opCodeList = {
     cast_vote: new BN(0x13828ee9),
     verify_vote: new BN(0x5e73911f),
     add_vote: new BN(0x54e85894),
-    add_user: new BN(0x836b0bb9),
-    remove_user: new BN(0x9ff56bb9),
-    change_admin: new BN(0xd4deb03b),
+    add_voter: new BN(0x836b0bb9),
+    remove_voter: new BN(0x9b3f4098),
+    change_admin: new BN(0x9b23def8),
     claim_admin: new BN(0xb443e630),
     reset_gas: new BN(0x42a0fb43),
     reset_gas_storage: new BN(0xda764ba3),
@@ -100,61 +100,61 @@ export function getRegister(addressList: Dict, admin?: Address) {
     });
 };
 
-export function getVoteStorageInitData(addressList: Dict, jettonAddress: Address, admin?: Address) {
+export function getVoteStorageInitData(addressList: Dict, voteAddress: Address, admin?: Address) {
     return {
         registerAddress: getRegisterAddress(addressList, admin),
-        jettonAddress: jettonAddress,
-        whiteVotes: new BN(0),
-        blackVotes: new BN(0),
+        voteAddress: voteAddress,
+        posVotes: new BN(0),
+        negVotes: new BN(0),
         voteStatusCode: Cell.fromBoc(fs.readFileSync("build/vote_status.cell"))[0],
     };
 };
 
-export function getVoteStorageAddress(addressList: Dict, jettonAddress: Address, admin?: Address) {
+export function getVoteStorageAddress(addressList: Dict, voteAddress: Address, admin?: Address) {
     return contractAddress({
         workchain: 0,
         initialCode: Cell.fromBoc(fs.readFileSync("build/vote_storage.cell"))[0],
-        initialData: voteStorage.data(getVoteStorageInitData(addressList, jettonAddress, admin))
+        initialData: voteStorage.data(getVoteStorageInitData(addressList, voteAddress, admin))
     });
 };
 
-export function getVoteStorage(addressList: Dict, jettonAddress: Address, admin?: Address) {
+export function getVoteStorage(addressList: Dict, voteAddress: Address, admin?: Address) {
     return SmartContract.fromState({
-        address: getVoteStorageAddress(addressList, jettonAddress, admin),
+        address: getVoteStorageAddress(addressList, voteAddress, admin),
         accountState: {
             type: 'active',
             code: Cell.fromBoc(fs.readFileSync("build/vote_storage.cell"))[0],
-            data: voteStorage.data(getVoteStorageInitData(addressList, jettonAddress, admin))
+            data: voteStorage.data(getVoteStorageInitData(addressList, voteAddress, admin))
         },
         balance: toNano(10)
     });
 };
 
-export function getVoteStatusInitData(addressList: Dict, jettonAddress: Address, userAddress: Address, admin?: Address) {
+export function getVoteStatusInitData(addressList: Dict, voteAddress: Address, voterAddress: Address, admin?: Address) {
     return {
-        jettonAddress: jettonAddress,
-        userAddress: userAddress,
-        voteStorageAddress: getVoteStorageAddress(addressList, jettonAddress, admin),
-        whiteVote: new BN(0),
-        blackVote: new BN(0),
+        voteAddress: voteAddress,
+        voterAddress: voterAddress,
+        voteStorageAddress: getVoteStorageAddress(addressList, voteAddress, admin),
+        posVote: new BN(0),
+        negVote: new BN(0),
     };
 };
 
-export function getVoteStatusAddress(addressList: Dict, jettonAddress: Address, userAddress: Address, admin?: Address) {
+export function getVoteStatusAddress(addressList: Dict, voteAddress: Address, voterAddress: Address, admin?: Address) {
     return contractAddress({
         workchain: 0,
         initialCode: Cell.fromBoc(fs.readFileSync("build/vote_status.cell"))[0],
-        initialData: voteStatus.data(getVoteStatusInitData(addressList, jettonAddress, userAddress, admin))
+        initialData: voteStatus.data(getVoteStatusInitData(addressList, voteAddress, voterAddress, admin))
     });
 };
 
-export function getVoteStatus(addressList: Dict, jettonAddress: Address, userAddress: Address, admin?: Address) {
+export function getVoteStatus(addressList: Dict, voteAddress: Address, voterAddress: Address, admin?: Address) {
     return SmartContract.fromState({
-        address: getVoteStatusAddress(addressList, jettonAddress, userAddress, admin),
+        address: getVoteStatusAddress(addressList, voteAddress, voterAddress, admin),
         accountState: {
             type: 'active',
             code: Cell.fromBoc(fs.readFileSync("build/vote_status.cell"))[0],
-            data: voteStatus.data(getVoteStatusInitData(addressList, jettonAddress, userAddress, admin))
+            data: voteStatus.data(getVoteStatusInitData(addressList, voteAddress, voterAddress, admin))
         },
         balance: toNano(10)
     });

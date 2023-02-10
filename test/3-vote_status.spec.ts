@@ -171,8 +171,8 @@ describe("vote_status test", () => {
                 contract: contract,
                 fromAddress: sender,
                 msgBody: voteStatus.verifyVote({
-                    whiteVote: new BN(1),
-                    blackVote: new BN(0)
+                    posVote: new BN(1),
+                    negVote: new BN(0)
                 }),
                 expectBounce: true
             });
@@ -189,8 +189,8 @@ describe("vote_status test", () => {
                 contract: contract,
                 fromAddress: getVoteStorageAddress(addressList, jetton),
                 msgBody: voteStatus.verifyVote({
-                    whiteVote: value,
-                    blackVote: reverseBN(value)
+                    posVote: value,
+                    negVote: reverseBN(value)
                 }),
                 outMsgAddress: getVoteStorageAddress(addressList, jetton)
             }) as Slice;
@@ -226,8 +226,8 @@ describe("vote_status test", () => {
                 contract: contract,
                 fromAddress: getVoteStorageAddress(addressList, jetton),
                 msgBody: voteStatus.verifyVote({
-                    whiteVote: value,
-                    blackVote: reverseBN(value)
+                    posVote: value,
+                    negVote: reverseBN(value)
                 }),
                 outMsgAddress: getVoteStorageAddress(addressList, jetton)
             }) as Slice;
@@ -236,8 +236,8 @@ describe("vote_status test", () => {
                 contract: contract,
                 fromAddress: getVoteStorageAddress(addressList, jetton),
                 msgBody: voteStatus.verifyVote({
-                    whiteVote: value,
-                    blackVote: reverseBN(value)
+                    posVote: value,
+                    negVote: reverseBN(value)
                 }),
                 outMsgAddress: user
             }) as Slice;
@@ -268,8 +268,8 @@ describe("vote_status test", () => {
                 contract: contract,
                 fromAddress: getVoteStorageAddress(addressList, jetton),
                 msgBody: voteStatus.verifyVote({
-                    whiteVote: reverseBN(value),
-                    blackVote: value
+                    posVote: reverseBN(value),
+                    negVote: value
                 }),
                 outMsgAddress: getVoteStorageAddress(addressList, jetton)
             }) as Slice;
@@ -278,8 +278,8 @@ describe("vote_status test", () => {
                 contract: contract,
                 fromAddress: getVoteStorageAddress(addressList, jetton),
                 msgBody: voteStatus.verifyVote({
-                    whiteVote: value,
-                    blackVote: reverseBN(value)
+                    posVote: value,
+                    negVote: reverseBN(value)
                 }),
                 outMsgAddress: getVoteStorageAddress(addressList, jetton)
             }) as Slice;
@@ -301,6 +301,58 @@ describe("vote_status test", () => {
 
             expect(getData.whiteVote).to.be.bignumber.eq(value);
             expect(getData.blackVote).to.be.bignumber.eq(reverseBN(value));
+
+        };
+
+        await ctxFun(alice, new BN(0));
+        await ctxFun(alice, new BN(1));
+
+    });
+    it("should accept storage reset vote calls", async () => {
+        const getAddVal = (val: BN) => {
+            return val.toNumber() ? new BN(-1) : new BN(0);
+        };
+
+        const ctxFun = async (user: Address, value: BN) => {
+            contract = getVoteStatus(addressList, jetton, user);
+
+            let msgBody = await sendMessage({
+                contract: contract,
+                fromAddress: getVoteStorageAddress(addressList, jetton),
+                msgBody: voteStatus.verifyVote({
+                    posVote: value,
+                    negVote: reverseBN(value)
+                }),
+                outMsgAddress: getVoteStorageAddress(addressList, jetton)
+            }) as Slice;
+
+            msgBody = await sendMessage({
+                contract: contract,
+                fromAddress: getVoteStorageAddress(addressList, jetton),
+                msgBody: voteStatus.verifyVote({
+                    posVote: new BN(0),
+                    negVote: new BN(0)
+                }),
+                outMsgAddress: getVoteStorageAddress(addressList, jetton)
+            }) as Slice;
+
+            const opCode = msgBody.readUint(32);
+            const qId = msgBody.readUint(64);
+            const userAddress = msgBody.readAddress();
+            const whiteAdd = msgBody.readInt(2);
+            const blackAdd = msgBody.readInt(2);
+
+            // verify content
+            expect(opCode).to.be.bignumber.eq(opCodeList.add_vote);
+            expect(userAddress?.toString()).to.be.eq(user.toString());
+            expect(whiteAdd).to.be.bignumber.equal(getAddVal(value));
+            expect(blackAdd).to.be.bignumber.equal(getAddVal(reverseBN(value)));
+
+            // verify storage
+            const getData = await getVoteStatusData(contract)
+
+            expect(getData.whiteVote).to.be.bignumber.eq(new BN(0));
+            expect(getData.blackVote).to.be.bignumber.eq(new BN(0));
 
         };
 

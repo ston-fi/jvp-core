@@ -36,17 +36,17 @@
         ;; check if caller is register
         throw_unless(error::invalid_caller, equal_slices(ctx::sender_address, storage::register_address));
         
-        slice user_address = in_msg_body~load_msg_addr();
-        int white_vote = in_msg_body~load_uint(1);
-        int black_vote = in_msg_body~load_uint(1);
+        slice voter_address = in_msg_body~load_msg_addr();
+        int positive_vote = in_msg_body~load_uint(1);
+        int negative_vote = in_msg_body~load_uint(1);
 
-        (cell state_init, slice vote_status_address) = get_vote_status_state_init_and_address(user_address);
+        (cell state_init, slice vote_status_address) = get_vote_status_state_init_and_address(voter_address);
 
         cell msg_body = begin_cell()
             .store_uint(op::verify_vote, 32)
             .store_uint(query_id, 64)
-            .store_uint(white_vote, 1)
-            .store_uint(black_vote, 1)
+            .store_uint(positive_vote, 1)
+            .store_uint(negative_vote, 1)
         .end_cell();
         
         raw_reserve(max(my_balance - msg_value, MIN_TON_VOTE_STORAGE), RESERVE_EXACTLY);
@@ -56,22 +56,22 @@
     }
     
     if (op == op::add_vote) {
-        slice user_address = in_msg_body~load_msg_addr();
-        (_, slice vote_status_address) = get_vote_status_state_init_and_address(user_address);
+        slice voter_address = in_msg_body~load_msg_addr();
+        (_, slice vote_status_address) = get_vote_status_state_init_and_address(voter_address);
 
         ;; check if caller is user's vote status contract
         throw_unless(error::invalid_caller, equal_slices(ctx::sender_address, vote_status_address));
 
-        int white_add = in_msg_body~load_int(2);
-        int black_add = in_msg_body~load_int(2);
+        int positive_add = in_msg_body~load_int(2);
+        int negative_add = in_msg_body~load_int(2);
 
-        storage::white_votes += white_add;
-        storage::black_votes += black_add;
+        storage::positive_votes += positive_add;
+        storage::negative_votes += negative_add;
 
         save_storage();
 
         ;; send remaining gas back to user
-        send_empty_message(0, user_address, CARRY_REMAINING_GAS | IGNORE_ERRORS);
+        send_empty_message(0, voter_address, CARRY_REMAINING_GAS | IGNORE_ERRORS);
 
         return ();
     }
