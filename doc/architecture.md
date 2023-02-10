@@ -2,11 +2,11 @@
 
 The goal of this project is to create on-chain Jetton voting platform. The system consists of 3 primary contracts: `Register`, `Vote Storage` and `Vote Status`. 
 
-The `Register` contract is the entry point of the system, it stores a number of wallet addresses which are allowed to vote ("voters" or "vote participants") and has an admin responsible for adding/removing addresses from this list, as well as other administrative functions. The `Register` routes vote calls to a `Vote Storage` contract, which is unique for each Jetton address. 
+The `Register` contract is the entry point of the system, it stores a number of wallet addresses that are allowed to vote ("voters" or "voting participants") and has an admin responsible for adding/removing addresses from this list, as well as other administrative functions. The `Register` routes vote calls to a `Vote Storage` contract, which is unique for each Jetton address. 
 
-`Vote Storage` stores all accumulated "positive" and "negative" votes cast by vote participants and routes voter calls to `Vote Status` for vote verification (each `Vote Status` is unique for each Jetton for each vote participant). 
+`Vote Storage` stores all accumulated "positive" and "negative" votes cast by voting participants and routes voter calls to `Vote Status` for vote verification (each `Vote Status` is unique for each Jetton for each voting participant). 
 
-`Vote Status` checks, if a voter's vote is valid, and messages `Vote Storage` to modify a total vote count. All vote participants' votes are equal in power and each voter can vote only once for each Jetton address (as well as change their vote from "positive" to "negative" and vice versa). A vote participant may also reset their vote by sending both "positive" and "negative" values as 0.
+`Vote Status` checks, if a voter's vote is valid, and messages `Vote Storage` to modify a total vote count. All voting participants' votes are equal in power and each voter can vote only once for each Jetton address (as well as change their vote from "positive" to "negative" and vice versa). A voting participant may also reset their vote by sending both "positive" and "negative" values as 0.
 
 To determine a status of a Jetton one must query an appropriate `Vote Storage` contract, which will return contract's stored "positive" and "negative" votes; an exact formula of a Jetton reputation is up to the frontend implementation, which is independent of this system, but it is suggested to place a heavy emphasis on "negative" votes or even make a single "negative" vote outweigh any number of "positive" votes.
 
@@ -16,7 +16,7 @@ It is important to note that the suggested system is not limited to voting only 
 
 ## Initial vote casting by a user
 
-A vote participant sends a custom payload to the `Register` contract with a Jetton address and their vote ("positive" or "negative"). The register verifies that the sender is allowed to cast their vote by checking the list of allowed addresses. The register routes the call to the `Vote storage` contract for the Jetton which forwards this call to voter's `Vote status` to verify if their vote is eligible. Finally, `Vote status` will send a message to modify the reputation of the Jetton to its `Vote storage` contract.
+A voting participant sends a custom payload to the `Register` contract with a Jetton address and their vote ("positive" or "negative"). The register verifies that the sender is allowed to cast their vote by checking the list of allowed addresses. The register routes the call to the `Vote storage` contract for the Jetton which forwards this call to voter's `Vote status` to verify if their vote is eligible. Finally, `Vote status` will send a message to modify the reputation of the Jetton to its `Vote storage` contract.
 
 ```mermaid
 graph LR
@@ -39,7 +39,7 @@ The mechanism is the same, except that `Vote status` contract checks if the new 
 
 ## Reset vote
 
-To reset their vote a vote participant sends both votes values as 0.
+To reset their vote a voting participant sends both votes values as 0.
 
 ## Checking Jetton
 
@@ -48,7 +48,7 @@ Checking is done through an off-chain get method on `Vote storage`.
 
 # Register contract
 
-Main contract that routes vote participant's calls to the correct `Vote storage` contracts.
+Main contract that routes voting participant's calls to the correct `Vote storage` contracts.
 
 ## Storage
 
@@ -104,7 +104,7 @@ Add a new address to the list which are allowed to vote on a Jetton status.
 
 ### remove_voter
 
-Remove a user from the list of vote participant.
+Remove a user from the list of voting participant.
 
 #### **Incoming message body**
 
@@ -180,7 +180,7 @@ Claim an admin status. This call can only be made by a new admin that was specif
 
 ### cast_vote
 
-Casts vote participant's vote for "positive" or "negative". Can cast an opposite vote for vote change or with both values as 0 to reset vote. 
+Casts voting participant's vote for "positive" or "negative". Can cast an opposite vote for vote change or with both values as 0 to reset vote. 
 #### **Incoming message body**
 
 | Name             | Type      | Description                      |
@@ -216,7 +216,7 @@ Stores a Jetton rep and forwards calls from voters to `Vote status` contracts fo
 
 ### `get_vote_status_address`
 
-Returns an address of a `Vote Status` contract for a vote participant for this `Vote Storage`.
+Returns an address of a `Vote Status` contract for a voting participant for this `Vote Storage`.
 
 Args:
 - voter address
@@ -250,7 +250,7 @@ Forward validity check of the call to `Vote Status`.
 | ---------------- | --------- | -------------------------------- |
 | `op`             | `uint32`  | Operation code                   |
 | `query_id`       | `uint64`  | Query id                         |
-| `voter_address`   | `address` | An address of a vote participant           |
+| `voter_address`   | `address` | An address of a voting participant           |
 | `vote_address` | `address` | An address of a Jetton           |
 | `positive_vote`     | `uint1`   | If a user votes for "positive" |
 | `negative_vote`     | `uint1`   | If a user votes for "negative" |
@@ -269,7 +269,7 @@ Modify votes on storage after user's call was verified by `Vote Status`
 | -------------- | --------- | ----------------------------------- |
 | `op`           | `uint32`  | Operation code                      |
 | `query_id`     | `uint64`  | Query id                            |
-| `voter_address` | `address` | An address of a vote participant              |
+| `voter_address` | `address` | An address of a voting participant              |
 | `positive_add`    | `int2`    | Number of "positive" votes to add |
 | `negative_add`    | `int2`    | Number of "negative" votes to add |
 
@@ -295,7 +295,7 @@ Sends the rest of the balance to admin.
 
 # Vote status contract
 
-Verifies that a vote participant is allowed to cast their vote and forwards a message back to `Vote storage` to add their vote to the total count of "positive" and "negative" votes.
+Verifies that a voting participant is allowed to cast their vote and forwards a message back to `Vote storage` to add their vote to the total count of "positive" and "negative" votes.
 
 ## Storage
 
