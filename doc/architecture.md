@@ -1,12 +1,20 @@
 # Introduction
 
-The goal of this project is to create a whitelist & blacklist on-chain registry
+The goal of this project is to create on-chain jetton voting platform. The system consists of 3 primary contracts: `Register`, `Vote Storage` and `Vote Status`. 
+
+The `Register` contract is the entry point of the system, it stores a number of wallet addresses which are allowed to vote and has an admin responsible for adding/removing user addresses from this list, as well as other administrative functions.  The `Register` routs vote calls to a `Vote Storage` contract, which is unique for each Jetton address. 
+
+`Vote Storage` stores all accumulated "trusted" and "untrusted" votes cast by users and routs user calls to `Vote Status` for vote verification (each `Vote Status` is unique for each Jetton for each user). 
+
+`Vote Status` checks, if a user's vote is valid, and messages `Vote Storage` to modify a total vote count. All user votes are equal in power and each user can vote only once for each Jetton address (as well as change their vote from "trusted" to "untrusted" and vice versa). 
+
+To determine a status of a Jetton one must query an appropriate `Vote Storage` contract, which will return contract's stored "trusted" and "untrusted" votes; an exact formula of a Jetton reputation is up to the frontend implementation, which is independent of this system, but it is suggested to place a heavy emphasis on "untrusted" votes or even make a single "untrusted" vote outweigh any number of "trusted" votes.
 
 # Message logic
 
 ## Initial vote casting by a user
 
-A user sends a custom payload to the `Register` contract with a Jetton address and their vote (blacklist or whitelist). The register verifies that the user is allowed to cast their vote by checking the list of allowed addresses. The register routes the call to the `Vote storage` contract for the Jetton which forward this call to user's `Vote status` to verify if their vote is eligible. Finally, `Vote status` will send a message to modify the reputation of the Jetton to its `Vote storage` contract.
+A user sends a custom payload to the `Register` contract with a Jetton address and their vote ("trusted" or "untrusted"). The register verifies that the user is allowed to cast their vote by checking the list of allowed addresses. The register routes the call to the `Vote storage` contract for the Jetton which forward this call to user's `Vote status` to verify if their vote is eligible. Finally, `Vote status` will send a message to modify the reputation of the Jetton to its `Vote storage` contract.
 
 ```mermaid
 graph LR
@@ -151,7 +159,7 @@ Those messages are sent by users
 | Name          | Code       | Description                                  |
 | ------------- | ---------- | -------------------------------------------- |
 | `claim_admin` | 0xb443e630 | Claim new admin status by a new address      |
-| `cast_vote`   | 0x13828ee9 | Cast a vote for whitelisting or blacklisting |
+| `cast_vote`   | 0x13828ee9 | Cast a vote for "trusted" or "untrusted" |
 
 ### claim_admin
 
@@ -166,7 +174,7 @@ Claim an admin status. This call can only be made by a user that was specified b
 
 ### cast_vote
 
-Casts user's vote for whitelisting or blacklisting. Can cast an opposite vote for vote change. 
+Casts user's vote for "trusted" or "untrusted". Can cast an opposite vote for vote change. 
 #### **Incoming message body**
 
 | Name             | Type      | Description                      |
@@ -174,8 +182,8 @@ Casts user's vote for whitelisting or blacklisting. Can cast an opposite vote fo
 | `op`             | `uint32`  | Operation code                   |
 | `query_id`       | `uint64`  | Query id                         |
 | `jetton_address` | `address` | An address of a Jetton           |
-| `white_vote`     | `uint1`   | If a user votes for whitelisting |
-| `black_vote`     | `uint1`   | If a user votes for blacklisting |
+| `white_vote`     | `uint1`   | If a user votes for "trusted" |
+| `black_vote`     | `uint1`   | If a user votes for "untrusted" |
 
 Notes:
 
@@ -194,8 +202,8 @@ Stores a Jetton rep and forwards calls from users to `Vote status` contracts for
 
 - `Register` address
 - Jetton address
-- users' whitelist votes
-- users' blacklist votes
+- users' "trusted" votes
+- users' "untrusted" votes
 - `Vote Status` code
 
 ## Off-chain getters
@@ -212,8 +220,8 @@ Args:
 Returns data from storage:
 - `Register` address
 - Jetton address
-- whitelist votes
-- blacklist votes
+- "trusted" votes
+- "untrusted" votes
 - `Vote Status` code
 
 ## Internal messages
@@ -238,8 +246,8 @@ Forward validity check of the call to `Vote Status`
 | `query_id`       | `uint64`  | Query id                         |
 | `user_address`   | `address` | An address of a Jetton           |
 | `jetton_address` | `address` | An address of a Jetton           |
-| `white_vote`     | `uint1`   | If a user votes for whitelisting |
-| `black_vote`     | `uint1`   | If a user votes for blacklisting |
+| `white_vote`     | `uint1`   | If a user votes for "trusted" |
+| `black_vote`     | `uint1`   | If a user votes for "untrusted" |
 
 #### Outgoing messages
 
@@ -256,8 +264,8 @@ Modify votes on storage after user's call was verified by `Vote Status`
 | `op`           | `uint32`  | Operation code                      |
 | `query_id`     | `uint64`  | Query id                            |
 | `user_address` | `address` | An address of a Jetton              |
-| `white_add`    | `int2`    | Number of whitelisting votes to add |
-| `black_add`    | `int2`    | Number of blacklisting votes to add |
+| `white_add`    | `int2`    | Number of "trusted" votes to add |
+| `black_add`    | `int2`    | Number of "untrusted" votes to add |
 
 #### Outgoing messages
 
@@ -288,8 +296,8 @@ Verifies that a user is allowed to cast their vote and forwards a message back t
 - Jetton address
 - user address
 - `Vote Storage` address
-- user's whitelist vote status (0 or 1)
-- user's blacklist vote status (0 or 1)
+- user's "trusted" vote status (0 or 1)
+- user's "untrusted" vote status (0 or 1)
 
 ## Off-chain getters
 
@@ -299,8 +307,8 @@ Returns data from storage:
 - Jetton address
 - user address
 - `Vote Storage` address
-- whitelist vote
-- blacklist vote
+- "trusted" vote
+- "untrusted" vote
 
 ## Internal messages
 
@@ -321,8 +329,8 @@ Check if user's vote is correct, i.e. it is an initial vote or a vote change
 | ------------ | -------- | -------------------------------- |
 | `op`         | `uint32` | Operation code                   |
 | `query_id`   | `uint64` | Query id                         |
-| `white_vote` | `uint1`  | If a user votes for whitelisting |
-| `black_vote` | `uint1`  | If a user votes for blacklisting |
+| `white_vote` | `uint1`  | If a user votes for "trusted" |
+| `black_vote` | `uint1`  | If a user votes for "untrusted" |
 
 #### Outgoing messages
 
