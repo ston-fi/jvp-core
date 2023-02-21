@@ -79,8 +79,8 @@ async function main() {
                 value: gas,
                 bounce: true,
                 body: new CommonMessageInfo({
-                    body: new CellMessage(register.addUser({
-                        userAddress: getMyAddress()
+                    body: new CellMessage(register.addVoter({
+                        voterAddress: getMyAddress()
                     })),
                 }),
             }),

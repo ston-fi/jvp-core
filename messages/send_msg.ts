@@ -80,7 +80,7 @@ async function main() {
                 bounce: true,
                 body: new CommonMessageInfo({
                     body: new CellMessage(register.castVote({
-                        jettonAddress: JETTON_ADDRESS,
+                        voteAddress: JETTON_ADDRESS,
                         posVote: new BN(1),
                         negVote: new BN(0)
                     })),
