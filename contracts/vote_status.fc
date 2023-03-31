@@ -1,16 +1,17 @@
 #pragma version >=0.2.0;
 
-#include "common/stdlib.func";
-#include "common/messages.func";
-#include "common/reserves.func"; 
-#include "common/utils.func";
-#include "common/errors.func";
-#include "common/params.func";
-#include "common/op.func";
+#include "common/stdlib.fc";
+#include "common/stdlib-pp.fc";
+#include "common/messages.fc";
+#include "common/reserves.fc"; 
+#include "common/utils.fc";
+#include "common/errors.fc";
+#include "common/params.fc";
+#include "common/op.fc";
 
-#include "vote_status/globals.func";
-#include "vote_status/storage.func";
-#include "vote_status/get.func";
+#include "vote_status/globals.fc";
+#include "vote_status/storage.fc";
+#include "vote_status/get.fc";
 
 
 () recv_internal(int my_balance, int msg_value, cell in_msg_full, slice in_msg_body) impure {

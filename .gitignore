@@ -8,7 +8,5 @@ bin
 /.idea
 .DS_Store
 
-build/*.fif
-build/*.fc
-build/*.cell
-build/_rnd_addr.txt
+build/*compiled.json
+build/*config.json

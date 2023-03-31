@@ -1,0 +1,32 @@
+{
+    "registerAddress": "EQD-TOP6QtEJJipkII1kbJBL3nZ3lV_HiFUa-W7MEIsOrV7A",
+    "voteStorageAddress": "EQDJj5RzP_hnm78QRnvFMMbcc3sc98kRHDBFQphvmBim1eol",
+    "voteAddress": "EQBIp6Peg0E95xpEkRdIZJhLHk3uMgzdxWA8s5GUTFF1ZkzE",
+    "voteStatusAddress": "EQBd47egP7r3OjZ5PlNzRGyKo33Ch-N_qcumG3lW8ntzlA0-",
+    "newAdminAddress": "EQAG1Jse61i_IBRILwaHXT9CG6vv1kF-x4rqWZ0GK8eEkMW7",
+    "addVotersList": [
+        "EQAG1Jse61i_IBRILwaHXT9CG6vv1kF-x4rqWZ0GK8eEkMW7",
+        "EQAO9JsDEbOjnb8AZRyxNHiODjVeAvgR2n03T0utYgkpx79x"
+    ],
+    "removeVoterList": [
+        "EQAO9JsDEbOjnb8AZRyxNHiODjVeAvgR2n03T0utYgkpx79x"
+    ],
+
+    "castPosVotes": "build/tokens.json",
+    //  or
+    "castPosVotes": [
+        "EQBIp6Peg0E95xpEkRdIZJhLHk3uMgzdxWA8s5GUTFF1ZkzE"
+    ],
+
+    "castNegVotes": "build/tokens.json",
+    //  or
+    "castPosVotes": [
+        "EQBIp6Peg0E95xpEkRdIZJhLHk3uMgzdxWA8s5GUTFF1ZkzE"
+    ],
+
+    "castResetVotes": "build/tokens.json",
+    //  or
+    "castResetVotes": [
+        "EQBIp6Peg0E95xpEkRdIZJhLHk3uMgzdxWA8s5GUTFF1ZkzE"
+    ]
+}
