@@ -1,5 +1,5 @@
 # Jetton voting platform
-
+ĺ
 [![TON](https://img.shields.io/badge/based%20on-TON-blue)](https://ton.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
 
@@ -47,7 +47,7 @@ yarn blueprint run --mainnet --mnemonic addMyself
 
 Send positive votes:
 
-```shell
+```shell open EQBClCK3uH9OsYgTgiABIDSLbm9JqakxQXu1ZA4LrXlfcSGs
 yarn blueprint run --mainnet --mnemonic castPosVotes
 ```
 
@@ -60,7 +60,7 @@ yarn blueprint run --mainnet --mnemonic castPNegVotes
 ### Get methods
 
 Call get method to data on register:
-
+EQBClCK3uH9OsYgTgiABIDSLbm9JqakxQXu1ZA4LrXlfcSGs
 ```shell
 yarn blueprint run --mainnet --mnemonic getRegisterData
 ```
